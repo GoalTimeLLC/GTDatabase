@@ -1,0 +1,20 @@
+{
+    "name": "goaltimellc/gtdatabase",
+    "description": "Goal Time LLC database access and query package",
+    "type": "library",
+    "license": "proprietary",
+    "autoload": {
+        "psr-4": {
+            "Goaltimellc\\Gtdatabase\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Lee Autore",
+            "email": "lee@goal-time.com"
+        }
+    ],
+    "require": {
+        "php": ">=8.2"
+    }
+}
