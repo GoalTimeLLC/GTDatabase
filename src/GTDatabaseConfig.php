@@ -22,6 +22,7 @@ class GTDatabaseConfig
         $this->dbPass = $sDbPass;
         $this->timezone = new DateTimeZone('America/New_York');
         $this->errorReportingLevel = E_ERROR;
+        $this->sDebugPath = '';
     }
 
     public function getDbServer(): string { return $this->dbServer; }
