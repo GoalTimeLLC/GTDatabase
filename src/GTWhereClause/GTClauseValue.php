@@ -1,6 +1,6 @@
 <?php
 
-namespace GoalTimeLLC\GTDatabase\WhereClause;
+namespace GoalTimeLLC\GTDatabase\GTWhereClause;
 
 class GTClauseValue
 {
