@@ -44,21 +44,26 @@ class GTDatabase {
      * @param GTDatabaseConfig $aGtDatabaseConfig
      * @param string $sInstanceReference Pass a name to create multiple instances (default "initial")
      * @return void
+     * @throws Exception
      */
     public static function setConfigUsingObject(GTDatabaseConfig $aGtDatabaseConfig, string $sInstanceReference = 'initial' ): void
     {
-        if( !isset( static::$aConfigurations[ $sInstanceReference ] ) ) {
-            static::$aConfigurations[ $sInstanceReference ]['DBSERVER'] = $aGtDatabaseConfig->getDbServer();
-            static::$aConfigurations[ $sInstanceReference ]['DBNAME'] = $aGtDatabaseConfig->getDbName();
-            static::$aConfigurations[ $sInstanceReference ]['DBUSER'] = $aGtDatabaseConfig->getDbUser();
-            static::$aConfigurations[ $sInstanceReference ]['DBPASS'] = $aGtDatabaseConfig->getDbPass();
-            static::$aConfigurations[ $sInstanceReference ]['ErrorReportingLevel'] = $aGtDatabaseConfig->getErrorReportingLevel();
-            static::$aConfigurations[ $sInstanceReference ]['TimeZone'] = $aGtDatabaseConfig->getTimezone();
-            static::$aConfigurations[ $sInstanceReference ]['isDebugEnabled'] = $aGtDatabaseConfig->isDebugEnabled();
-            static::$aConfigurations[ $sInstanceReference ]['debugPath'] = $aGtDatabaseConfig->getDebugPath();
+        if( isset( static::$aConfigurations[ $sInstanceReference ] ) ) {
+            throw new Exception('Can only configure once per GTDatabase object.');
         }
-        static::$aConfigurationStatus[ $sInstanceReference ] = true;
+        static::$aConfigurations[ $sInstanceReference ] = $aGtDatabaseConfig;
     }
+
+    public static function getConfigs(): array
+    {
+        return array_keys( self::$aConfigurations );
+    }
+
+    public static function getConfig( $sInstanceReference = 'initial' ): GTDatabaseConfig
+    {
+        return self::$aConfigurations[ $sInstanceReference ];
+    }
+
 
     /**
      * Recommended: Use "new GTDatabaseConfig( ... )" instead.
@@ -71,17 +76,16 @@ class GTDatabase {
      * @param int $iErrorReportingLevel You can supply a PHP reporting level for all database instance functions (default E_ERROR)
      * @param DateTimeZone $sTimezone You can pass a DateTimeZone which is used during any database and result functions
      * @return void
+     * @throws Exception
      */
     public static function setConfigManually($sServer, $sDatabaseName, $sUsername, $sPassword, string $sInstanceReference = 'initial', int $iErrorReportingLevel = E_ERROR, DateTimeZone $sTimezone = new DateTimeZone('America/New_York') ): void
     {
-        if( !isset( static::$aConfigurations[ $sInstanceReference ] ) ) {
-            static::$aConfigurations[ $sInstanceReference ]['DBSERVER'] = $sServer;
-            static::$aConfigurations[ $sInstanceReference ]['DBNAME'] = $sDatabaseName;
-            static::$aConfigurations[ $sInstanceReference ]['DBUSER'] = $sUsername;
-            static::$aConfigurations[ $sInstanceReference ]['DBPASS'] = $sPassword;
-            static::$aConfigurations[ $sInstanceReference ]['ErrorReportingLevel'] = $iErrorReportingLevel;
-            static::$aConfigurations[ $sInstanceReference ]['TimeZone'] = $sTimezone;
+        if( isset( static::$aConfigurations[ $sInstanceReference ] ) ) {
+            throw new Exception('Can only configure once per GTDatabase object.');
         }
+        $dbConfig = new GTDatabaseConfig($sServer, $sDatabaseName, $sUsername, $sPassword);
+        $dbConfig->setErrorReportingLevel( $iErrorReportingLevel );
+        $dbConfig->setTimezone( $sTimezone );
     }
 
     private function setErrorReportingTimezone(): array {
@@ -116,8 +120,8 @@ class GTDatabase {
      */
     public function __construct(string $sInstanceName = 'initial' ) {
         $this->sThisInstanceName = $sInstanceName;
-        if( !isset( static::$aConfigurationStatus[ $sInstanceName ] ) ) {
-            throw new Exception('You must use GTDatabase::setConfig( GTDatabaseConfig $config ) before instantiating.' );
+        if( !isset( static::$aConfigurations[ $sInstanceName ] ) ) {
+            throw new Exception('666You must use GTDatabase::setConfig( GTDatabaseConfig $config ) before instantiating.' );
         }
         $this->iErrorReportingLevel = static::$aConfigurations[ $sInstanceName ]->getErrorReportingLevel();
         $this->sThisTimeZone = static::$aConfigurations[ $sInstanceName ]->getTimezone();
@@ -348,7 +352,7 @@ class GTDatabase {
      * @param array $aParameters Parameters to be used for the "?" substitutions.
      * @return array|null Returns an array of values for the result.
      */
-    public function execSQLQuerySingle(string $sSql, array $aParameters): ?array {
+    public function execSQLQuerySingle(string $sSql, array $aParameters = []): ?array {
         $aResults = static::execSqlQuery($sSql, $aParameters);
         if ($aResults === null) return null;
         if (count($aResults) === 0) return [];
@@ -361,7 +365,7 @@ class GTDatabase {
      * @param array $aParameters Parameters to be used for the "?" substitutions.
      * @return int|null Returns the count of affected rows.
      */
-    public function execSqlDelete(string $sSql, array $aParameters ): ?int {
+    public function execSqlDelete(string $sSql, array $aParameters = [] ): ?int {
         $uuidTransaction = uniqid();
         $stmtExecuted = $this->executeSqlStatement( $sSql, $aParameters, $uuidTransaction, static::DEBUG_TYPE_DELETE );
         $iRowsAffected = $this->getRowsAffected( $stmtExecuted );
@@ -375,7 +379,7 @@ class GTDatabase {
      * @param array $aParameters Parameters to be used for the "?" substitutions.
      * @return int|null Returns the count of affected rows.
      */
-    public function execSqlUpdate(string $sSql, array $aParameters ): ?int {
+    public function execSqlUpdate(string $sSql, array $aParameters = [] ): ?int {
         $uuidTransaction = uniqid();
         $stmtExecuted = $this->executeSqlStatement( $sSql, $aParameters, $uuidTransaction, static::DEBUG_TYPE_UPDATE );
         $iRowsAffected = $this->getRowsAffected( $stmtExecuted );
