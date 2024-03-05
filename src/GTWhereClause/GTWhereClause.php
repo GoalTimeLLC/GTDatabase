@@ -3,7 +3,7 @@
 namespace GoalTimeLLC\GTDatabase\GTWhereClause;
 
 use Exception;
-use GoalTimeLLC\GTDatabase\WhereClause\GTClauseValue;
+use GoalTimeLLC\GTDatabase\GTWhereClause\GTClauseValue;
 
 class GTWhereClause
 {
