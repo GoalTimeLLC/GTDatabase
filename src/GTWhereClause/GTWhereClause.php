@@ -113,43 +113,90 @@ class GTWhereClause
 
         switch( $this->constClauseType ) {
             case static::GTWHERE_EQUAL:
-                $sSqlOutput = $sWhereClauseSql1.' = '.$sWhereClauseSql2;
+                if( $this->bIsNot ) {
+                    $sSqlOutput = $sWhereClauseSql1.' <> '.$sWhereClauseSql2;
+                } else {
+                    $sSqlOutput = $sWhereClauseSql1.' = '.$sWhereClauseSql2;
+                }
+
                 break;
             case static::GTWHERE_BETWEEN:
                 if( !is_array($sWhereClauseSql2) ) {
                     throw new Exception( 'For GTWHERE_BETWEEN, $oColumnValueOrWhereClause2 must be an array.' );
                 }
-                $sSqlOutput = $sWhereClauseSql1.' BETWEEN ('.$sWhereClauseSql2[0].') AND ('.$sWhereClauseSql2[1].')';
+                if( $this->bIsNot ) {
+                    $sSqlOutput = $sWhereClauseSql1 . ' NOT BETWEEN (' . $sWhereClauseSql2[0] . ') AND (' . $sWhereClauseSql2[1] . ')';
+                } else {
+                    $sSqlOutput = $sWhereClauseSql1 . ' BETWEEN (' . $sWhereClauseSql2[0] . ') AND (' . $sWhereClauseSql2[1] . ')';
+                }
                 break;
             case static::GTWHERE_GREATER_THAN:
-                $sSqlOutput = '('.$sWhereClauseSql1.' > '.$sWhereClauseSql2;
+                if( $this->bIsNot ) {
+                    $sSqlOutput = '(' . $sWhereClauseSql1 . ' <= ' . $sWhereClauseSql2;
+                } else {
+                    $sSqlOutput = '(' . $sWhereClauseSql1 . ' > ' . $sWhereClauseSql2;
+                }
                     break;
             case static::GTWHERE_LESS_THAN:
-                $sSqlOutput = '('.$sWhereClauseSql1.' < '.$sWhereClauseSql2;
+                if( $this->bIsNot ) {
+                    $sSqlOutput = '(' . $sWhereClauseSql1 . ' >= ' . $sWhereClauseSql2;
+                } else {
+                    $sSqlOutput = '(' . $sWhereClauseSql1 . ' < ' . $sWhereClauseSql2;
+                }
                     break;
             case static::GTWHERE_GREATER_THAN_OR_EQUAL_TO:
-                $sSqlOutput = '('.$sWhereClauseSql1.' >= '.$sWhereClauseSql2;
+                if( $this->bIsNot ) {
+                    $sSqlOutput = '('.$sWhereClauseSql1.' < '.$sWhereClauseSql2;
+                } else {
+                    $sSqlOutput = '('.$sWhereClauseSql1.' >= '.$sWhereClauseSql2;
+
+                }
                     break;
             case static::GTWHERE_LESS_THAN_OR_EQUAL_TO:
-                $sSqlOutput = '('.$sWhereClauseSql1.' <= '.$sWhereClauseSql2;
+                if( $this->bIsNot ) {
+                    $sSqlOutput = '('.$sWhereClauseSql1.' > '.$sWhereClauseSql2;
+                } else {
+                    $sSqlOutput = '('.$sWhereClauseSql1.' <= '.$sWhereClauseSql2;
+                }
                     break;
             case static::GTWHERE_IN:
                 if( !is_array($sWhereClauseSql2) ) {
                     throw new Exception( 'For GTWHERE_IN, $oColumnValueOrWhereClause2 must be an array.' );
                 }
-                $sSqlOutput = '('.$sWhereClauseSql1.') IN ('.implode(',', $sWhereClauseSql2) .')';
+                if( $this->bIsNot ) {
+                    $sSqlOutput = '(' . $sWhereClauseSql1 . ') NOT IN (' . implode(',', $sWhereClauseSql2) . ')';
+                } else {
+                    $sSqlOutput = '(' . $sWhereClauseSql1 . ') IN (' . implode(',', $sWhereClauseSql2) . ')';
+
+                }
                 break;
             case static::GTWHERE_IS_NULL:
-                $sSqlOutput = '('.$sWhereClauseSql1.') IS NULL';
+                if( $this->bIsNot ) {
+                    $sSqlOutput = '(' . $sWhereClauseSql1 . ') IS NOT NULL';
+                } else {
+                    $sSqlOutput = '(' . $sWhereClauseSql1 . ') IS NULL';
+                }
                 break;
             case static::GTWHERE_IS_TRUE:
-                $sSqlOutput = '('.$sWhereClauseSql1.') = TRUE';
+                if( $this->bIsNot ) {
+                    $sSqlOutput = '(' . $sWhereClauseSql1 . ') = TRUE';
+                } else {
+                    $sSqlOutput = '(' . $sWhereClauseSql1 . ') = FALSE';
+                }
                     break;
             case static::GTWHERE_AND:
-                $sSqlOutput = '('. $sWhereClauseSql1.') AND ('.$sWhereClauseSql2.')';
+                if( $this->bIsNot ) {
+                    $sSqlOutput = 'NOT ((' . $sWhereClauseSql1 . ') AND (' . $sWhereClauseSql2 . '))';
+                } else {
+                    $sSqlOutput = '(' . $sWhereClauseSql1 . ') AND (' . $sWhereClauseSql2 . ')';
+                }
                 break;
             case static::GTWHERE_OR:
-                $sSqlOutput = '('. $sWhereClauseSql1.') OR ('.$sWhereClauseSql2.')';
+                if( $this->bIsNot ) {
+                    $sSqlOutput = 'NOT (('. $sWhereClauseSql1.') OR ('.$sWhereClauseSql2.'))';
+                } else {
+                    $sSqlOutput = '('. $sWhereClauseSql1.') OR ('.$sWhereClauseSql2.')';
+                }
                 break;
             case static::GTWHERE_AND_MANY_BROKEN:
                 $aAndComponents = [];
@@ -159,7 +206,11 @@ class GTWhereClause
                     }
                     $aAndComponents[] = $oWhereClause2Item->toSql();
                 }
-                $sSqlOutput = '('. implode( ' AND ', $aAndComponents ) .')';
+                if( $this->bIsNot ) {
+                    $sSqlOutput = '(' . implode(' AND ', $aAndComponents) . ')';
+                } else {
+                    $sSqlOutput = 'NOT (' . implode(' AND ', $aAndComponents) . ')';
+                }
                 break;
             case static::GTWHERE_OR_MANY_BROKEN:
                 $aOrComponents = [];
@@ -169,7 +220,11 @@ class GTWhereClause
                     }
                     $aOrComponents[] = $oWhereClause2Item->toSql();
                 }
-                $sSqlOutput = '('. implode( ' OR ', $aOrComponents ) .')';
+                if( $this->bIsNot ) {
+                    $sSqlOutput = '(' . implode(' OR ', $aOrComponents) . ')';
+                } else {
+                    $sSqlOutput = 'NOT (' . implode(' OR ', $aOrComponents) . ')';
+                }
                 break;
             case static::GTWHERE_CUSTOM:
                 $sSqlOutput = $sWhereClauseSql1;

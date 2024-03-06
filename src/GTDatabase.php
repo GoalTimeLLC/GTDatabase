@@ -236,6 +236,7 @@ class GTDatabase {
 
     private function getInsertId( mysqli_stmt $stmtExecuted ): int
     {
+        echo "\n".$stmtExecuted->insert_id."\n";
         return $stmtExecuted->insert_id;
     }
     private function getRowsAffected( mysqli_stmt $stmtExecuted ): int
